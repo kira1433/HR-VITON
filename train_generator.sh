@@ -1,0 +1,1 @@
+python train_generator.py --cuda True --name test -b 4 -j 8 --gpu_ids 0 --fp16 --tocg_checkpoint ./checkpoints/tocg_final.pth --occlusion

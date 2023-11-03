@@ -132,7 +132,7 @@ class ConditionGenerator(nn.Module):
                 
                 flow = F.interpolate(flow_list[i - 1].permute(0, 3, 1, 2), scale_factor=2, mode=upsample).permute(0, 2, 3, 1)  # upsample n-1 flow
                 flow_norm = torch.cat([flow[:, :, :, 0:1] / ((iW/2 - 1.0) / 2.0), flow[:, :, :, 1:2] / ((iH/2 - 1.0) / 2.0)], 3)
-                warped_T1 = F.grid_sample(T1, flow_norm + grid, padding_mode='border')
+                warped_T1 = F.grid_sample(T1, flow_norm + grid, padding_mode='border',align_corners=True)
                 
                 flow = flow + self.flow_conv[i](self.normalize(torch.cat([warped_T1, self.bottleneck[i-1](x)], 1))).permute(0, 2, 3, 1)  # F(n)
                 flow_list.append(flow)
@@ -140,7 +140,7 @@ class ConditionGenerator(nn.Module):
                 if self.warp_feature == 'T1':
                     x = self.SegDecoder[i](torch.cat([x, E2_list[4-i], warped_T1], 1))
                 if self.warp_feature == 'encoder':
-                    warped_E1 = F.grid_sample(E1_list[4-i], flow_norm + grid, padding_mode='border')
+                    warped_E1 = F.grid_sample(E1_list[4-i], flow_norm + grid, padding_mode='border',align_corners=True)
                     x = self.SegDecoder[i](torch.cat([x, E2_list[4-i], warped_E1], 1))
         
  
@@ -149,7 +149,7 @@ class ConditionGenerator(nn.Module):
         
         flow = F.interpolate(flow_list[-1].permute(0, 3, 1, 2), scale_factor=2, mode=upsample).permute(0, 2, 3, 1)
         flow_norm = torch.cat([flow[:, :, :, 0:1] / ((iW/2 - 1.0) / 2.0), flow[:, :, :, 1:2] / ((iH/2 - 1.0) / 2.0)], 3)
-        warped_input1 = F.grid_sample(input1, flow_norm + grid, padding_mode='border')
+        warped_input1 = F.grid_sample(input1, flow_norm + grid, padding_mode='border',align_corners=True)
         
         x = self.out_layer(torch.cat([x, input2, warped_input1], 1))
 

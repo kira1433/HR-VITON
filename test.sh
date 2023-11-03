@@ -1,0 +1,1 @@
+python test_generator.py --occlusion --cuda True --gpu_ids 0 --data_list demo.txt

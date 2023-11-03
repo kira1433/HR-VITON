@@ -1,0 +1,1 @@
+python train_condition.py --cuda True --gpu_ids 0 --Ddownx2 --Ddropout --lasttvonly --interflowloss --occlusion

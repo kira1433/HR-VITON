@@ -31,8 +31,8 @@ def get_opt():
 
     parser.add_argument('--tensorboard_dir', type=str, default='tensorboard', help='save tensorboard infos')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints', help='save checkpoint infos')
-    parser.add_argument('--tocg_checkpoint', type=str, default='', help='tocg checkpoint')
-    parser.add_argument('--D_checkpoint', type=str, default='', help='D checkpoint')
+    parser.add_argument('--tocg_checkpoint', type=str, default='./eval_models/weights/v0.1/mtviton.pth', help='tocg checkpoint')
+    parser.add_argument('--D_checkpoint', type=str, default='./eval_models/weights/v0.1/discriminator_mtviton.pth', help='D checkpoint')
     
     parser.add_argument("--tensorboard_count", type=int, default=100)
     parser.add_argument("--shuffle", action='store_true', help='shuffle input data')
@@ -81,7 +81,7 @@ def test(opt, test_loader, board, tocg, D=None):
         # input1
         c_paired = inputs['cloth'][opt.datasetting].cuda()
         cm_paired = inputs['cloth_mask'][opt.datasetting].cuda()
-        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
         # input2
         parse_agnostic = inputs['parse_agnostic'].cuda()
         densepose = inputs['densepose'].cuda()
@@ -103,7 +103,7 @@ def test(opt, test_loader, board, tocg, D=None):
             flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(input1, input2)
             
             # warped cloth mask one hot 
-            warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+            warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
             
             if opt.clothmask_composition != 'no_composition':
                 if opt.clothmask_composition == 'detach':

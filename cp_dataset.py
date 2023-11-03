@@ -133,9 +133,10 @@ class CPDataset(data.Dataset):
             cm_array = (cm_array >= 128).astype(np.float32)
             cm[key] = torch.from_numpy(cm_array)  # [0,1]
             cm[key].unsqueeze_(0)
-
+        
         # person image
         im_pil_big = Image.open(osp.join(self.data_path, im_name))
+        
         im_pil = transforms.Resize(self.fine_width, interpolation=2)(im_pil_big)
         im = self.transform(im_pil)
 
@@ -283,7 +284,9 @@ class CPDatasetTest(data.Dataset):
     def name(self):
         return "CPDataset"
 
-    def __getitem__(self, index):
+    def __getitem__(self, mindex):
+        index = mindex // 6 # 6 is the number of augmentation
+        scale = 1.0 - 0.1 * (mindex % 6)
         im_name = self.im_names[index]
         c_name = {}
         c = {}
@@ -303,12 +306,14 @@ class CPDatasetTest(data.Dataset):
 
         # person image
         im = Image.open(osp.join(self.data_path, 'image', im_name))
+        im = transforms.RandomResizedCrop(self.fine_height,self.fine_width, scale=(scale, scale))(im)
         im = transforms.Resize(self.fine_width, interpolation=2)(im)
         im = self.transform(im)
 
         # load parsing image
         parse_name = im_name.replace('.jpg', '.png')
         im_parse = Image.open(osp.join(self.data_path, 'image-parse-v3', parse_name))
+        im_parse = transforms.RandomResizedCrop(self.fine_height,self.fine_width, scale=(scale, scale))(im_parse)
         im_parse = transforms.Resize(self.fine_width, interpolation=0)(im_parse)
         parse = torch.from_numpy(np.array(im_parse)[None]).long()
         im_parse = self.transform(im_parse.convert('RGB'))
@@ -344,6 +349,7 @@ class CPDatasetTest(data.Dataset):
 
         # load image-parse-agnostic
         image_parse_agnostic = Image.open(osp.join(self.data_path, 'image-parse-agnostic-v3.2', parse_name))
+        image_parse_agnostic = transforms.RandomResizedCrop(self.fine_height,self.fine_width, scale=(scale, scale))(image_parse_agnostic)
         image_parse_agnostic = transforms.Resize(self.fine_width, interpolation=0)(image_parse_agnostic)
         parse_agnostic = torch.from_numpy(np.array(image_parse_agnostic)[None]).long()
         image_parse_agnostic = self.transform(image_parse_agnostic.convert('RGB'))
@@ -363,6 +369,7 @@ class CPDatasetTest(data.Dataset):
         # load pose points
         pose_name = im_name.replace('.jpg', '_rendered.png')
         pose_map = Image.open(osp.join(self.data_path, 'openpose_img', pose_name))
+        pose_map = transforms.RandomResizedCrop(self.fine_height,self.fine_width, scale=(scale, scale))(pose_map)
         pose_map = transforms.Resize(self.fine_width, interpolation=2)(pose_map)
         pose_map = self.transform(pose_map)  # [-1,1]
         
@@ -370,6 +377,7 @@ class CPDatasetTest(data.Dataset):
         # load densepose
         densepose_name = im_name.replace('image', 'image-densepose')
         densepose_map = Image.open(osp.join(self.data_path, 'image-densepose', densepose_name))
+        densepose_map = transforms.RandomResizedCrop(self.fine_height,self.fine_width, scale=(scale, scale))(densepose_map)
         densepose_map = transforms.Resize(self.fine_width, interpolation=2)(densepose_map)
         densepose_map = self.transform(densepose_map)  # [-1,1]
 
@@ -398,7 +406,7 @@ class CPDatasetTest(data.Dataset):
         return result
 
     def __len__(self):
-        return len(self.im_names)
+        return len(self.im_names)*6
     
 
 class CPDataLoader(object):

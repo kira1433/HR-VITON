@@ -137,7 +137,7 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
         # input1
         c_paired = inputs['cloth']['paired'].cuda()
         cm_paired = inputs['cloth_mask']['paired'].cuda()
-        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
         # input2
         parse_agnostic = inputs['parse_agnostic'].cuda()
         densepose = inputs['densepose'].cuda()
@@ -155,11 +155,11 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
         input2 = torch.cat([parse_agnostic, densepose], 1)
 
         # forward
-        flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(input1, input2)
+        flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(opt,input1, input2)
         
         # warped cloth mask one hot 
         
-        warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+        warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
         # fake segmap cloth channel * warped clothmask
         if opt.clothmask_composition != 'no_composition':
             if opt.clothmask_composition == 'detach':
@@ -238,11 +238,11 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
             for i in range(len(flow_list)-1):
                 flow = flow_list[i]
                 N, fH, fW, _ = flow.size()
-                grid = mkgrid(N, iH, iW)
+                grid = mkgrid(N, iH, iW,opt)
                 flow = F.interpolate(flow.permute(0, 3, 1, 2), size = c_paired.shape[2:], mode=opt.upsample).permute(0, 2, 3, 1)
                 flow_norm = torch.cat([flow[:, :, :, 0:1] / ((fW - 1.0) / 2.0), flow[:, :, :, 1:2] / ((fH - 1.0) / 2.0)], 3)
-                warped_c = F.grid_sample(c_paired, flow_norm + grid, padding_mode='border')
-                warped_cm = F.grid_sample(cm_paired, flow_norm + grid, padding_mode='border')
+                warped_c = F.grid_sample(c_paired, flow_norm + grid, padding_mode='border',align_corners=True)
+                warped_cm = F.grid_sample(cm_paired, flow_norm + grid, padding_mode='border',align_corners=True)
                 warped_cm = remove_overlap(F.softmax(fake_segmap, dim=1), warped_cm)
                 loss_l1_cloth += criterionL1(warped_cm, parse_cloth_mask) / (2 ** (4-i))
                 loss_vgg += criterionVGG(warped_c, im_c) / (2 ** (4-i))
@@ -296,7 +296,7 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
                 
                 # discriminator
                 with torch.no_grad():
-                    _, fake_segmap, _, _ = tocg(input1, input2)
+                    _, fake_segmap, _, _ = tocg(opt,input1, input2)
                 fake_segmap_softmax = torch.softmax(fake_segmap, 1)
                 
                 # loss discriminator
@@ -321,7 +321,7 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
                     # input1
                     c_paired = inputs['cloth']['paired'].cuda()
                     cm_paired = inputs['cloth_mask']['paired'].cuda()
-                    cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                    cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                     # input2
                     parse_agnostic = inputs['parse_agnostic'].cuda()
                     densepose = inputs['densepose'].cuda()
@@ -338,7 +338,7 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
                     input2 = torch.cat([parse_agnostic, densepose], 1)
                     
                     # forward
-                    flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(input1, input2)
+                    flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(opt,input1, input2)
                 
                     # fake segmap cloth channel * warped clothmask
                     if opt.clothmask_composition != 'no_composition':
@@ -385,7 +385,7 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
                 # input1
                 c_paired = inputs['cloth'][opt.test_datasetting].cuda()
                 cm_paired = inputs['cloth_mask'][opt.test_datasetting].cuda()
-                cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                 # input2
                 parse_agnostic = inputs['parse_agnostic'].cuda()
                 densepose = inputs['densepose'].cuda()
@@ -405,9 +405,9 @@ def train(opt, train_loader, test_loader, val_loader, board, tocg, D):
                     input2 = torch.cat([parse_agnostic, densepose], 1)
 
                     # forward
-                    flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(input1, input2)
+                    flow_list, fake_segmap, warped_cloth_paired, warped_clothmask_paired = tocg(opt,input1, input2)
                     
-                    warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                    warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                     if opt.clothmask_composition != 'no_composition':
                         if opt.clothmask_composition == 'detach':
                             cloth_mask = torch.ones_like(fake_segmap)
@@ -478,12 +478,12 @@ def main():
     # Model
     input1_nc = 4  # cloth + cloth-mask
     input2_nc = opt.semantic_nc + 3  # parse_agnostic + densepose
-    tocg = ConditionGenerator(opt, input1_nc=4, input2_nc=input2_nc, output_nc=opt.output_nc, ngf=96, norm_layer=nn.BatchNorm2d)
+    tocg = ConditionGenerator(opt=opt, input1_nc=4, input2_nc=input2_nc, output_nc=opt.output_nc, ngf=96, norm_layer=nn.BatchNorm2d)
     D = define_D(input_nc=input1_nc + input2_nc + opt.output_nc, Ddownx2 = opt.Ddownx2, Ddropout = opt.Ddropout, n_layers_D=3, spectral = opt.spectral, num_D = opt.num_D)
     
     # Load Checkpoint
     if not opt.tocg_checkpoint == '' and os.path.exists(opt.tocg_checkpoint):
-        load_checkpoint(tocg, opt.tocg_checkpoint)
+        load_checkpoint(tocg, opt.tocg_checkpoint,opt)
 
     # Train
     train(opt, train_loader, val_loader, test_loader, board, tocg, D)

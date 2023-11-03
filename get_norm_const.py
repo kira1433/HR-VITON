@@ -78,7 +78,7 @@ def get_const(opt, train_loader, tocg, D, length):
         # input1
         c_paired = inputs['cloth']['paired'].cuda()
         cm_paired = inputs['cloth_mask']['paired'].cuda()
-        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+        cm_paired = torch.FloatTensor((cm_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
         # input2
         parse_agnostic = inputs['parse_agnostic'].cuda()
         densepose = inputs['densepose'].cuda()

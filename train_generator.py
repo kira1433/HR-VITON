@@ -215,7 +215,7 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                 flow_list, fake_segmap, _, warped_clothmask_paired = tocg(input1, input2)
                 
                 # warped cloth mask one hot 
-                warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                 
                 if opt.clothmask_composition != 'no_composition':
                     if opt.clothmask_composition == 'detach':
@@ -234,8 +234,8 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                 flow = F.interpolate(flow_list[-1].permute(0, 3, 1, 2), size=(iH, iW), mode='bilinear').permute(0, 2, 3, 1)
                 flow_norm = torch.cat([flow[:, :, :, 0:1] / ((96 - 1.0) / 2.0), flow[:, :, :, 1:2] / ((128 - 1.0) / 2.0)], 3)
                 warped_grid = grid + flow_norm
-                warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border').detach()
-                warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border')
+                warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border',align_corners=True).detach()
+                warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border',align_corners=True)
 
                 # make generator input parse map
                 fake_parse_gauss = gauss(F.interpolate(fake_segmap, size=(iH, iW), mode='bilinear'))
@@ -411,7 +411,7 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                     flow_list, fake_segmap, _, warped_clothmask_paired = tocg(input1, input2)
                     
                     # warped cloth mask one hot 
-                    warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                    warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                     
                     if opt.clothmask_composition != 'no_composition':
                         if opt.clothmask_composition == 'detach':
@@ -430,8 +430,8 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                     flow = F.interpolate(flow_list[-1].permute(0, 3, 1, 2), size=(iH, iW), mode='bilinear').permute(0, 2, 3, 1)
                     flow_norm = torch.cat([flow[:, :, :, 0:1] / ((96 - 1.0) / 2.0), flow[:, :, :, 1:2] / ((128 - 1.0) / 2.0)], 3)
                     warped_grid = grid + flow_norm
-                    warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border').detach()
-                    warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border')
+                    warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border',align_corners=True).detach()
+                    warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border',align_corners=True)
 
                     # make generator input parse map
                     fake_parse_gauss = gauss(F.interpolate(fake_segmap, size=(iH, iW), mode='bilinear'))
@@ -517,7 +517,7 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                             flow_list, fake_segmap, _, warped_clothmask_paired = tocg(input1, input2)
                             
                             # warped cloth mask one hot 
-                            warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+                            warped_cm_onehot = torch.FloatTensor((warped_clothmask_paired.detach().cpu().numpy() > 0.5).astype(np.float32)).cuda()
                             
                             if opt.clothmask_composition != 'no_composition':
                                 if opt.clothmask_composition == 'detach':
@@ -537,8 +537,8 @@ def train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generato
                             
                             grid = make_grid(N, iH, iW,opt)
                             warped_grid = grid + flow_norm
-                            warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border').detach()
-                            warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border')
+                            warped_cloth_paired = F.grid_sample(c_paired, warped_grid, padding_mode='border',align_corners=True).detach()
+                            warped_clothmask = F.grid_sample(cm, warped_grid, padding_mode='border',align_corners=True)
 
                             # make generator input parse map
                             fake_parse_gauss = gauss(F.interpolate(fake_segmap, size=(iH, iW), mode='bilinear'))
@@ -636,7 +636,7 @@ def main():
         input2_nc = opt.semantic_nc + 3  # parse_agnostic + densepose
         tocg = ConditionGenerator(opt, input1_nc=input1_nc, input2_nc=input2_nc, output_nc=13, ngf=96, norm_layer=nn.BatchNorm2d)
         # Load Checkpoint
-        load_checkpoint(tocg, opt.tocg_checkpoint)
+        load_checkpoint(tocg, opt.tocg_checkpoint,opt)
 
     # Generator model
     generator = SPADEGenerator(opt, 3+3+3)
@@ -652,8 +652,8 @@ def main():
 
     # Load Checkpoint
     if not opt.gen_checkpoint == '' and os.path.exists(opt.gen_checkpoint):
-        load_checkpoint(generator, opt.gen_checkpoint)
-        load_checkpoint(discriminator, opt.dis_checkpoint)
+        load_checkpoint(generator, opt.gen_checkpoint,opt)
+        load_checkpoint(discriminator, opt.dis_checkpoint,opt)
 
     # Train
     train(opt, train_loader, test_loader, test_vis_loader, board, tocg, generator, discriminator, model)
