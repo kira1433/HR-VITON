@@ -25,10 +25,10 @@ cd ./HR-VITON/
 Install PyTorch and other dependencies:
 
 ```
-conda create -n {env_name} python=3.8
-conda activate {env_name}
-conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch-lts -c nvidia
-pip install opencv-python torchgeometry Pillow tqdm tensorboardX scikit-image scipy
+conda create -y -n viton python=3.8
+conda activate viton
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118  //check for Linux once Cuda 11.8
+pip install opencv-python torchgeometry Pillow tqdm tensorboardX scikit-image scipy IPython apex
 ```
 
 ## Dataset
