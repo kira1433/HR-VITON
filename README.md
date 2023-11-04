@@ -28,7 +28,7 @@ Install PyTorch and other dependencies:
 conda create -y -n viton python=3.8
 conda activate viton
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118  //check for Linux once Cuda 11.8
-pip install opencv-python torchgeometry Pillow tqdm tensorboardX scikit-image scipy IPython apex
+pip install opencv-python torchgeometry Pillow tqdm tensorboardX scikit-image scipy IPython
 ```
 
 ## Dataset
@@ -64,7 +64,7 @@ python3 train_generator.py --cuda {True} --name test -b 4 -j 8 --gpu_ids {gpu_id
 ```
 This stage takes approximately 4 days with two RTX 3090 GPUs. Tested environment: PyTorch 1.8.2+cu111.
 
-To use "--fp16" option, you should install apex library.
+To use "--fp16" option, you should install apex library. (Not used here)
 
 ## License
 
