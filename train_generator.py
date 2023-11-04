@@ -8,6 +8,7 @@ import os
 import time
 from cp_dataset import CPDataset, CPDataLoader
 from cp_dataset_test import CPDatasetTest
+from scaled_dataset import ScaledDataset
 from networks import ConditionGenerator, VGGLoss, load_checkpoint, save_checkpoint, make_grid
 from network_generator import SPADEGenerator, MultiscaleDiscriminator, GANLoss
 
@@ -42,8 +43,8 @@ def get_opt():
     parser.add_argument('--cuda',default=False, help='cuda or cpu')
 
     parser.add_argument("--dataroot", default="./data/")
-    parser.add_argument("--datamode", default="train")
-    parser.add_argument("--data_list", default="train_pairs.txt")
+    parser.add_argument("--datamode", default="test")
+    parser.add_argument("--data_list", default="test_pairs.txt")
     parser.add_argument("--fine_width", type=int, default=768)
     parser.add_argument("--fine_height", type=int, default=1024)
     parser.add_argument("--radius", type=int, default=20)
@@ -604,7 +605,7 @@ def main():
     print("Start to train %s!" % opt.name)
 
     # create dataset
-    train_dataset = CPDataset(opt)
+    train_dataset = ScaledDataset(opt)
 
     # create dataloader
     train_loader = CPDataLoader(opt, train_dataset)
@@ -614,13 +615,13 @@ def main():
     opt.dataroot = opt.test_dataroot
     opt.datamode = 'test'
     opt.data_list = opt.test_data_list
-    test_dataset = CPDatasetTest(opt)
+    test_dataset = ScaledDataset(opt)
     test_dataset = Subset(test_dataset, np.arange(500))
     test_loader = CPDataLoader(opt, test_dataset)
     
     # test vis loader
     opt.batch_size = opt.num_test_visualize
-    test_vis_dataset = CPDatasetTest(opt)
+    test_vis_dataset = ScaledDataset(opt)
     test_vis_loader = CPDataLoader(opt, test_vis_dataset)
     
     # visualization

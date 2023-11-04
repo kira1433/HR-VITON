@@ -7,6 +7,7 @@ import argparse
 import os
 import time
 from cp_dataset_test import CPDatasetTest, CPDataLoader
+from scaled_dataset import ScaledDataset
 
 from networks import ConditionGenerator, load_checkpoint, make_grid
 from network_generator import SPADEGenerator
@@ -245,7 +246,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_ids
     
     # create test dataset & loader
-    test_dataset = CPDatasetTest(opt)
+    test_dataset = ScaledDataset(opt)
     test_loader = CPDataLoader(opt, test_dataset)
     
     # visualization

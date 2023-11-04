@@ -8,6 +8,7 @@ import argparse
 import os
 import time
 from cp_dataset import CPDataset, CPDatasetTest, CPDataLoader
+from scaled_dataset import ScaledDataset
 from networks import ConditionGenerator, VGGLoss, GANLoss, load_checkpoint, save_checkpoint, define_D
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
@@ -52,8 +53,8 @@ def get_opt():
     parser.add_argument('--fp16', action='store_true', help='use amp')
 
     parser.add_argument("--dataroot", default="./data/")
-    parser.add_argument("--datamode", default="train")
-    parser.add_argument("--data_list", default="train_pairs.txt")
+    parser.add_argument("--datamode", default="test")
+    parser.add_argument("--data_list", default="test_pairs.txt")
     parser.add_argument("--fine_width", type=int, default=192)
     parser.add_argument("--fine_height", type=int, default=256)
 
@@ -454,7 +455,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_ids
     
     # create train dataset & loader
-    train_dataset = CPDataset(opt)
+    train_dataset = ScaledDataset(opt)
     train_loader = CPDataLoader(opt, train_dataset)
     
     # create test dataset & loader
@@ -465,7 +466,7 @@ def main():
         opt.dataroot = opt.test_dataroot
         opt.datamode = 'test'
         opt.data_list = opt.test_data_list
-        test_dataset = CPDatasetTest(opt)
+        test_dataset = ScaledDataset(opt)
         opt.batch_size = train_bsize
         val_dataset = Subset(test_dataset, np.arange(2000))
         test_loader = CPDataLoader(opt, test_dataset)
