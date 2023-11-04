@@ -58,10 +58,10 @@ def get_opt():
 
     parser.add_argument("--tensorboard_count", type=int, default=100)
     parser.add_argument("--display_count", type=int, default=100)
-    parser.add_argument("--save_count", type=int, default=10000)
+    parser.add_argument("--save_count", type=int, default=1000)
     parser.add_argument("--load_step", type=int, default=0)
-    parser.add_argument("--keep_step", type=int, default=100000)
-    parser.add_argument("--decay_step", type=int, default=100000)
+    parser.add_argument("--keep_step", type=int, default=10000)
+    parser.add_argument("--decay_step", type=int, default=10000)
     parser.add_argument("--shuffle", action='store_true', help='shuffle input data')
     
     # test

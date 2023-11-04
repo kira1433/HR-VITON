@@ -66,7 +66,7 @@ def get_opt():
     parser.add_argument("--display_count", type=int, default=100)
     parser.add_argument("--save_count", type=int, default=10000)
     parser.add_argument("--load_step", type=int, default=0)
-    parser.add_argument("--keep_step", type=int, default=300000)
+    parser.add_argument("--keep_step", type=int, default=30000)
     parser.add_argument("--shuffle", action='store_true', help='shuffle input data')
     parser.add_argument("--semantic_nc", type=int, default=13)
     parser.add_argument("--output_nc", type=int, default=13)
